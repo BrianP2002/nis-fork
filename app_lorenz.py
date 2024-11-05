@@ -7,25 +7,45 @@ import matplotlib.pyplot as plt
 from nilss import *
 
 
-rho_lb = 20
-rho_ub = 22
+par = "sigma"
+par_lb = 8
+par_ub = 15
+rho = 28
 sigma = 10
 beta = 8. / 3.
-rho_arr = np.arange(rho_lb, rho_ub + 1)
-J_arr = np.zeros(rho_arr.shape)
-dJdrho_arr = np.zeros(rho_arr.shape)
+vpar = 1.5
+par_arr = np.arange(par_lb, par_ub + 1)
+J_arr = np.zeros(par_arr.shape)
+dJdpar_arr = np.zeros(par_arr.shape)
 
 
-def ddt(uwvs, rho):
+def ddt(uwvs, par, value):
     u = uwvs[0]
     x, y, z = u
     w = uwvs[1]
     vstar = uwvs[2]
+
+    global rho, sigma, beta
+    dfdrho = np.array([0, x, 0])
+    dfdsigma = np.array([y - x, 0, 0])
+    dfdbeta = np.array([0, 0, z])
+    dfdpar = None
+    if par == "rho":
+        dfdpar = dfdrho
+        rho = value
+    elif par == "sigma":
+        sigma = value
+        dfdpar = dfdsigma
+    elif par == "beta":
+        beta = value
+        dfdpar == dfdbeta
+
+
     dudt = np.array([sigma * (y - x), x * (rho - z) - y, x * y - beta * z])
     Df = np.array([[-sigma, sigma, 0],[rho - z,-1,-x],[y,x,-beta]])
     dwdt = np.dot(Df, w.T)
-    dfdrho = np.array([0, x, 0])
-    dvstardt = np.dot(Df, vstar) + dfdrho
+    dvstardt = np.dot(Df, vstar) + dfdpar
+
     return [dudt, dwdt.T, dvstardt]
 
 
@@ -40,8 +60,15 @@ assert(nus < nc)
 
 
 # functions passing to nilss
-def fJJu(u, rho):
+def fJJu(u, par, value):
     x, y, z = u
+    global rho, sigma, beta
+    if par == "rho":
+        rho = value
+    elif par == "sigma":
+        sigma = value
+    elif par == "beta":
+        beta = value
     return np.array([sigma * (y - x), x * (rho - z) - y, x * y - beta * z]),\
             z, np.array([0,0,1])
 
@@ -57,20 +84,20 @@ def RK4(u, w, vstar, rho):
     return uwvs_new
 
 
-def Euler(u, w, vstar, rho):
+def Euler(u, w, vstar, par, value):
     uwvs = [u, w, vstar]
-    k0 = [dt*vec for vec in ddt(uwvs, rho)] 
+    k0 = [dt*vec for vec in ddt(uwvs, par, value)] 
     uwvs_new = [v1+v2 for v1,v2 in zip(uwvs,k0)] 
     return uwvs_new
 
 
 # main loop
-for i, rho in enumerate(rho_arr):
-    print(rho)
+for i, par_value in enumerate(par_arr):
+    print(par_value)
     u0 =  (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50]) #[-10, -10, 60]
-    J, dJdrho = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, rho, Euler, fJJu)
+    J, dJdpar = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
     J_arr[i] = J
-    dJdrho_arr[i] = dJdrho
+    dJdpar_arr[i] = dJdpar
 
 
 # plot preparations
@@ -81,19 +108,25 @@ plt.rc('legend', fontsize='xx-large')
 plt.rc('font', family='sans-serif')
 
 
-# plot J vs r
-plt.figure(figsize=[12,12])
-plt.subplot(2,1,1)
-plt.plot(rho_arr, J_arr)
-plt.xlabel(r'$\rho$')
+par_latex_map = {
+    "rho": r"\rho",
+    "sigma": r"\sigma",
+    "beta": r"\beta"
+}
+par_label = par_latex_map.get(par, par)
+
+# plot J vs parameter
+plt.figure(figsize=[12, 12])
+plt.subplot(2, 1, 1)
+plt.plot(par_arr, J_arr)
+plt.xlabel(fr'${par_label}$')
 plt.ylabel(r'$\langle J \rangle$')
 
-
-# plot dJdrho vs r
-plt.subplot(2,1,2)
-plt.plot(rho_arr, dJdrho_arr)
-plt.xlabel(r'$\rho$')
-plt.ylabel(r'$d \langle J \rangle / d \rho$')
-plt.ylim([0,2.0])
+# plot dJ/dpar vs parameter
+plt.subplot(2, 1, 2)
+plt.plot(par_arr, dJdpar_arr)
+plt.xlabel(fr'${par_label}$')
+plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
+plt.ylim([0, 2.0])
 plt.savefig('lorenz.png')
 plt.show()

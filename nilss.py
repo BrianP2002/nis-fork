@@ -8,7 +8,7 @@ from scipy.linalg import block_diag
 from pdb import set_trace
     
 
-def pushSeg(nseg, nstep, nus, nc, dt, u0, vstar0, w0, s, integrator, fJJu):
+def pushSeg(nseg, nstep, nus, nc, dt, u0, vstar0, w0, par, s, integrator, fJJu):
     """
     find u, w, vstar, f, J, dJdu on each segment.
     Here we store all values at all time steps for better intuition,
@@ -39,9 +39,9 @@ def pushSeg(nseg, nstep, nus, nc, dt, u0, vstar0, w0, s, integrator, fJJu):
         # compute u, w, vstar, f, J, dJdu
         for istep in range(0, nstep-1):
             u[iseg, istep+1], w[iseg, istep+1], vstar[iseg,istep+1]\
-                = integrator(u[iseg, istep], w[iseg, istep], vstar[iseg, istep], s)
+                = integrator(u[iseg, istep], w[iseg, istep], vstar[iseg, istep], par, s)
         for istep in range(0, nstep):
-            f[iseg, istep], J[iseg, istep], dJdu[iseg, istep] = fJJu(u[iseg, istep], s)
+            f[iseg, istep], J[iseg, istep], dJdu[iseg, istep] = fJJu(u[iseg, istep], par, s)
 
         # calculate vstar_perp and w_perp
         for i in range(0, nstep):
@@ -63,7 +63,7 @@ def pushSeg(nseg, nstep, nus, nc, dt, u0, vstar0, w0, s, integrator, fJJu):
     return [u, w, vstar, w_perp, vstar_perp, f, J, dJdu, Rs[:-1], bs[:-1], Q_temp, p_temp]
 
 
-def nilss(dt, nseg, T_seg, nseg_ps, u0, nus, s, integrator, fJJu):
+def nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, s, integrator, fJJu):
 
     nc = len(u0)
     nstep = int(round(T_seg / dt)) + 1 # number of step + 1 in each time segment
@@ -74,13 +74,13 @@ def nilss(dt, nseg, T_seg, nseg_ps, u0, nus, s, integrator, fJJu):
     for ius in range(0,nus):
         w0[ius] = np.random.rand(nc)
         w0[ius] = w0[ius] / np.linalg.norm(w0[ius])
-    u_ps, w_ps, vstar_ps, _, _, _, _, _, _, _, Q_ps, p_ps= pushSeg(nseg_ps, nstep, nus, nc, dt, u0, vstar0, w0, s, integrator, fJJu)
+    u_ps, w_ps, vstar_ps, _, _, _, _, _, _, _, Q_ps, p_ps= pushSeg(nseg_ps, nstep, nus, nc, dt, u0, vstar0, w0, par, s, integrator, fJJu)
     u0 = u_ps[-1,-1]
     w0 = Q_ps.T
     vstar0 = p_ps
 
     # find u, w, vstar on all segments
-    u, w, vstar, w_perp, vstar_perp, f, J, dJdu, Rs, bs, _, _ = pushSeg(nseg, nstep, nus, nc, dt,u0, vstar0, w0, s, integrator, fJJu)
+    u, w, vstar, w_perp, vstar_perp, f, J, dJdu, Rs, bs, _, _ = pushSeg(nseg, nstep, nus, nc, dt,u0, vstar0, w0, par, s, integrator, fJJu)
 
     # a weight matrix for integration, 0.5 at interfaces
     weight = np.ones(nstep)
