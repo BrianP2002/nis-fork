@@ -10,11 +10,12 @@ from nilss import *
 par = "beta"
 par_lb = 1
 par_ub = 6
+step_size = 0.5
 rho = 28
 sigma = 10
 beta = 8. / 3.
 vpar = 1.5
-par_arr = np.arange(par_lb, par_ub + 1)
+par_arr = np.arange(par_lb, par_ub, step_size)
 J_arr = np.zeros(par_arr.shape)
 dJdpar_arr = np.zeros(par_arr.shape)
 
