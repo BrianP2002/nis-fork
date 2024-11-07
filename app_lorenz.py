@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 from nilss import *
 
 
-par = "sigma"
-par_lb = 8
-par_ub = 15
+par = "beta"
+par_lb = 1
+par_ub = 6
 rho = 28
 sigma = 10
 beta = 8. / 3.
@@ -28,8 +28,9 @@ def ddt(uwvs, par, value):
     global rho, sigma, beta
     dfdrho = np.array([0, x, 0])
     dfdsigma = np.array([y - x, 0, 0])
-    dfdbeta = np.array([0, 0, z])
+    dfdbeta = np.array([0, 0, -z])
     dfdpar = None
+
     if par == "rho":
         dfdpar = dfdrho
         rho = value
@@ -38,7 +39,7 @@ def ddt(uwvs, par, value):
         dfdpar = dfdsigma
     elif par == "beta":
         beta = value
-        dfdpar == dfdbeta
+        dfdpar = dfdbeta
 
 
     dudt = np.array([sigma * (y - x), x * (rho - z) - y, x * y - beta * z])
@@ -128,5 +129,5 @@ plt.plot(par_arr, dJdpar_arr)
 plt.xlabel(fr'${par_label}$')
 plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
 plt.ylim([0, 2.0])
-plt.savefig('lorenz.png')
+plt.savefig(f'lorenz_{par}.png')
 plt.show()
