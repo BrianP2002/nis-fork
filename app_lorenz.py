@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from nilss import *
 
 
-par = "beta"
-par_lb = 1
-par_ub = 6
-step_size = 0.5
+par = "sigma"
+par_lb = 5
+par_ub = 15
+step_size = 0.1
 rho = 28
 sigma = 10
 beta = 8. / 3.
