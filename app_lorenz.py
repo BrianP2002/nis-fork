@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from nilss import *
 
 
-par = "sigma"
-par_lb = 5
-par_ub = 15
-step_size = 0.1
+par = "beta"
+par_lb = 1
+par_ub = 4
+step_size = 0.2
 rho = 28
 sigma = 10
 beta = 8. / 3.
@@ -27,8 +27,8 @@ def ddt(uwvs, par, value):
     vstar = uwvs[2]
 
     global rho, sigma, beta
-    dfdrho = np.array([0, x, 0])
     dfdsigma = np.array([y - x, 0, 0])
+    dfdrho = np.array([0, x, 0])
     dfdbeta = np.array([0, 0, -z])
     dfdpar = None
 
@@ -75,15 +75,37 @@ def fJJu(u, par, value):
             z, np.array([0,0,1])
 
 
-def RK4(u, w, vstar, rho):
-    # integrate u, w, and vstar to the next time step
-    uwvs = np.array([u, w, vstar])
-    k0 = dt * ddt(uwvs, rho) 
-    k1 = dt * ddt(uwvs + 0.5 * k0, rho)
-    k2 = dt * ddt(uwvs + 0.5 * k1, rho)
-    k3 = dt * ddt(uwvs + k2, rho)
-    uwvs_new = uwvs + (k0 + 2*k1 + 2*k2 + k3) / 6.0
-    return uwvs_new
+def RK4(u, w, vstar, par, value):
+    # Ensure that u, w, and vstar are numpy arrays
+    u = np.array(u)
+    w = np.array(w)
+    vstar = np.array(vstar)
+    
+    # Keep uwvs as a list, not a numpy array
+    uwvs = [u, w, vstar]  # Keep as a list to avoid creating a ragged array
+    
+    # Compute k0
+    k0_u, k0_w, k0_vstar = ddt(uwvs, par, value)
+    k0_u, k0_w, k0_vstar = dt * np.array(k0_u), dt * np.array(k0_w), dt * np.array(k0_vstar)
+
+    # Compute k1
+    k1_u, k1_w, k1_vstar = ddt([u + 0.5 * k0_u, w + 0.5 * k0_w, vstar + 0.5 * k0_vstar], par, value)
+    k1_u, k1_w, k1_vstar = dt * np.array(k1_u), dt * np.array(k1_w), dt * np.array(k1_vstar)
+
+    # Compute k2
+    k2_u, k2_w, k2_vstar = ddt([u + 0.5 * k1_u, w + 0.5 * k1_w, vstar + 0.5 * k1_vstar], par, value)
+    k2_u, k2_w, k2_vstar = dt * np.array(k2_u), dt * np.array(k2_w), dt * np.array(k2_vstar)
+
+    # Compute k3
+    k3_u, k3_w, k3_vstar = ddt([u + k2_u, w + k2_w, vstar + k2_vstar], par, value)
+    k3_u, k3_w, k3_vstar = dt * np.array(k3_u), dt * np.array(k3_w), dt * np.array(k3_vstar)
+
+    # Update state vectors
+    u_new = u + (k0_u + 2 * k1_u + 2 * k2_u + k3_u) / 6.0
+    w_new = w + (k0_w + 2 * k1_w + 2 * k2_w + k3_w) / 6.0
+    vstar_new = vstar + (k0_vstar + 2 * k1_vstar + 2 * k2_vstar + k3_vstar) / 6.0
+
+    return u_new, w_new, vstar_new
 
 
 def Euler(u, w, vstar, par, value):
@@ -129,6 +151,6 @@ plt.subplot(2, 1, 2)
 plt.plot(par_arr, dJdpar_arr)
 plt.xlabel(fr'${par_label}$')
 plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
-plt.ylim([0, 2.0])
+plt.ylim([-2.0, 2.0])
 plt.savefig(f'lorenz_{par}.png')
 plt.show()
