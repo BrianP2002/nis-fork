@@ -22,7 +22,9 @@ dJdpar_arr = np.zeros(par_arr.shape)
 
 
 def ddt(uwvs, par, value):
-    u = uwvs[0]
+    assert len(uwvs) == 3, f"uwvs must have 3 elements, got {len(uwvs)}"
+    u = np.asarray(uwvs[0])
+    assert u.shape == (3,), f"u must have shape (3,), got {u.shape}"
     x, y, z = u
     w = uwvs[1]
     vstar = uwvs[2]
@@ -42,14 +44,14 @@ def ddt(uwvs, par, value):
     elif par == "beta":
         beta = value
         dfdpar = dfdbeta
-
-
+        
     dudt = np.array([sigma * (y - x), x * (rho - z) - y, x * y - beta * z])
-    Df = np.array([[-sigma, sigma, 0],[rho - z,-1,-x],[y,x,-beta]])
+    Df = np.array([[-sigma, sigma, 0], [rho - z, -1, -x], [y, x, -beta]])
     dwdt = np.dot(Df, w.T)
     dvstardt = np.dot(Df, vstar) + dfdpar
 
     return [dudt, dwdt.T, dvstardt]
+
 
 
 # parameter passing to nilss
