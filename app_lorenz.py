@@ -117,41 +117,44 @@ def Euler(u, w, vstar, par, value):
     uwvs_new = [v1+v2 for v1,v2 in zip(uwvs,k0)] 
     return uwvs_new
 
-
-for i, par_value in enumerate(par_arr):
-    print(par_value)
-    u0 =  (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50]) #[-10, -10, 60]
-    J, dJdpar = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
-    J_arr[i] = J
-    dJdpar_arr[i] = dJdpar
-
-
-# plot preparations
-plt.rc('axes', labelsize='xx-large',  labelpad=12)
-plt.rc('xtick', labelsize='xx-large')
-plt.rc('ytick', labelsize='xx-large')
-plt.rc('legend', fontsize='xx-large')
-plt.rc('font', family='sans-serif')
+def main():
+    for i, par_value in enumerate(par_arr):
+        print(par_value)
+        u0 =  (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50]) #[-10, -10, 60]
+        J, dJdpar = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
+        J_arr[i] = J
+        dJdpar_arr[i] = dJdpar
 
 
-par_latex_map = {
-    "rho": r"\rho",
-    "sigma": r"\sigma",
-    "beta": r"\beta"
-}
-par_label = par_latex_map.get(par, par)
+    # plot preparations
+    plt.rc('axes', labelsize='xx-large',  labelpad=12)
+    plt.rc('xtick', labelsize='xx-large')
+    plt.rc('ytick', labelsize='xx-large')
+    plt.rc('legend', fontsize='xx-large')
+    plt.rc('font', family='sans-serif')
 
-# plot J vs parameter
-plt.figure(figsize=[12, 12])
-plt.subplot(2, 1, 1)
-plt.plot(par_arr, J_arr)
-plt.xlabel(fr'${par_label}$')
-plt.ylabel(r'$\langle J \rangle$')
 
-# plot dJ/dpar vs parameter
-plt.subplot(2, 1, 2)
-plt.plot(par_arr, dJdpar_arr)
-plt.xlabel(fr'${par_label}$')
-plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
-plt.savefig(f'lorenz_{par}.png')
-plt.show()
+    par_latex_map = {
+        "rho": r"\rho",
+        "sigma": r"\sigma",
+        "beta": r"\beta"
+    }
+    par_label = par_latex_map.get(par, par)
+
+    # plot J vs parameter
+    plt.figure(figsize=[12, 12])
+    plt.subplot(2, 1, 1)
+    plt.plot(par_arr, J_arr)
+    plt.xlabel(fr'${par_label}$')
+    plt.ylabel(r'$\langle J \rangle$')
+
+    # plot dJ/dpar vs parameter
+    plt.subplot(2, 1, 2)
+    plt.plot(par_arr, dJdpar_arr)
+    plt.xlabel(fr'${par_label}$')
+    plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
+    plt.savefig(f'lorenz_{par}.png')
+    plt.show()
+
+if __name__ == '__main__':
+    main()
