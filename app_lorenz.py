@@ -1,21 +1,22 @@
 # use single direction and N tiem segments to solve Lorentz problem
 import numpy as np
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from nilss import *
 
+np.random.seed(20241202)
 
-par = "beta"
-par_lb = 1
-par_ub = 4
+# Parameter Selection
+par = "sigma"
+par_lb = 5
+par_ub = 15
 step_size = 0.2
 rho = 28
 sigma = 10
 beta = 8. / 3.
 vpar = 1.5
-par_arr = np.arange(par_lb, par_ub, step_size)
+par_arr = np.arange(par_lb, par_ub + step_size, step_size)
 J_arr = np.zeros(par_arr.shape)
 dJdpar_arr = np.zeros(par_arr.shape)
 
@@ -115,7 +116,6 @@ def Euler(u, w, vstar, par, value):
     return uwvs_new
 
 
-# main loop
 for i, par_value in enumerate(par_arr):
     print(par_value)
     u0 =  (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50]) #[-10, -10, 60]
@@ -151,6 +151,5 @@ plt.subplot(2, 1, 2)
 plt.plot(par_arr, dJdpar_arr)
 plt.xlabel(fr'${par_label}$')
 plt.ylabel(fr'$d \langle J \rangle / d {par_label}$')
-plt.ylim([-2.0, 2.0])
 plt.savefig(f'lorenz_{par}.png')
 plt.show()
