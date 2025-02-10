@@ -1,0 +1,7 @@
+Parameter: beta
+NILSS Optimization:
+  Optimized Value: 3.0000
+  Corresponding J: 22.7637
+Regular Optimization (2-point):
+  Optimized Value: 2.0000
+  Corresponding J: 24.4319

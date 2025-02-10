@@ -7,19 +7,9 @@ from nilss import *
 
 np.random.seed(20241202)
 
-# Parameter Selection
-par = "sigma"
-par_lb = 5
-par_ub = 15
-step_size = 0.2
 rho = 28
 sigma = 10
 beta = 8. / 3.
-vpar = 1.5
-par_arr = np.arange(par_lb, par_ub + step_size, step_size)
-J_arr = np.zeros(par_arr.shape)
-dJdpar_arr = np.zeros(par_arr.shape)
-
 
 def ddt(uwvs, par, value):
     assert len(uwvs) == 3, f"uwvs must have 3 elements, got {len(uwvs)}"
@@ -118,8 +108,16 @@ def Euler(u, w, vstar, par, value):
     return uwvs_new
 
 def main():
+    # Parameter Selection
+    par = "sigma"
+    par_lb = 5
+    par_ub = 15
+    step_size = 0.2
+    par_arr = np.arange(par_lb, par_ub + step_size, step_size)
+    J_arr = np.zeros(par_arr.shape)
+    dJdpar_arr = np.zeros(par_arr.shape)
+
     for i, par_value in enumerate(par_arr):
-        print(par_value)
         u0 =  (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50]) #[-10, -10, 60]
         J, dJdpar = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
         J_arr[i] = J

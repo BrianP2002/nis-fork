@@ -1,0 +1,7 @@
+Parameter: sigma
+NILSS Optimization:
+  Optimized Value: 9.8663
+  Corresponding J: 23.2854
+Regular Optimization (2-point):
+  Optimized Value: 10.0000
+  Corresponding J: 23.6464

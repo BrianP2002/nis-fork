@@ -50,7 +50,7 @@ if __name__ == "__main__":
     u0 = np.array([1.0, 1.0, 1.0])
     nus = 2
     dt = 0.001
-    nseg = 1
+    nseg = 10
     T_seg = 2.0
     nseg_ps = 10
     integrator = Euler
@@ -65,5 +65,5 @@ if __name__ == "__main__":
     text_result_path = os.path.join(results_dir, f"optimization_results_{par_name}.txt")
     with open(text_result_path, "w") as f:
         f.write("Optimization Result:\n")
-        f.write(f"  Optimal {par_name}: {result.x[-1]:.4f}\n")
+        f.write(f"  Optimal {par_name}: {result.x[0]:.4f}\n")
         f.write(f"  Minimum cost J: {result.fun:.4e}\n")
