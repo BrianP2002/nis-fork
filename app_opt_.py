@@ -70,8 +70,7 @@ def optimize_lorenz(par_name, par_bounds, u0, nus, dt, nseg, T_seg, nseg_ps, int
         options={
             # 'maxiter': 20,
             # 'ftol': 1e-2,
-            'disp': True,
-            'epsilon': 1e-8
+            'disp': True
         }
     )
 

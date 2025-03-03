@@ -4,6 +4,8 @@ from scipy.optimize import minimize
 from nilss import nilss
 from app_lorenz import RK4, Euler, fJJu
 
+np.random.seed(20250212)
+
 results_dir = "results"
 os.makedirs(results_dir, exist_ok=True)
 
@@ -47,7 +49,8 @@ def optimize_lorenz_nilss(par_name, par_bounds, u0, nus, dt, nseg, T_seg, nseg_p
 if __name__ == "__main__":
     par_name = "rho"
     par_bounds = (15, 30)
-    u0 = np.array([1.0, 1.0, 1.0])
+    nc = 3
+    u0 = (np.random.rand(nc)-0.5) * 100 + np.array([0,0,50])
     nus = 2
     dt = 0.001
     nseg = 10
