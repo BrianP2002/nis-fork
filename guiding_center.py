@@ -1,6 +1,7 @@
 import jax
 import jax.numpy as jnp
 import diffrax
+import numpy as np
 
 def B(x, y, z, params):
     return 1.0 + params["a0"] * jnp.sqrt(x) * jnp.cos(y - params["a1"] * z)
@@ -30,10 +31,13 @@ params = {
     "G": 1.0,
     "lambda": 0.1
 }
-
 term = diffrax.ODETerm(ode_system)
 solver = diffrax.Tsit5()
-y0 = jnp.array([1.0, 0.0, 0.0])
-t0, t1 = 0.0, 20.0
-sol = diffrax.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=1e-3, y0=y0, args=params, max_steps=100000)
+x = 0.1 * np.random.rand()  
+y = 2.0 * np.pi * np.random.rand()
+z = 2.0 * np.pi * np.random.rand()
+y0 = jnp.array([x, y, z])
+t0, t1 = 0, 1
+saveat = diffrax.SaveAt(ts=jnp.linspace(t0, t1, 50))
+sol = diffrax.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=1e-3, y0=y0, args=params, max_steps=100000, saveat = saveat)
 print(sol.ys)

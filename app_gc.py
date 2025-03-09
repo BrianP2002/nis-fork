@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from nilss import *
 
-np.random.seed(20250220)
+np.random.seed(20250301)
 
 a0_global = 0.1
 a1_global = 1.0
@@ -184,9 +184,9 @@ def main():
     nseg_ps = 10
     nc = 3
     nus = 2
-    par = "a1"
-    par_lb = 0.9
-    par_ub = 1.1
+    par = "a0"
+    par_lb = -0.1
+    par_ub = 0.1
     step_size = 0.01
     par_arr = np.arange(par_lb, par_ub, step_size)
     J_arr = np.zeros(par_arr.shape)
@@ -197,7 +197,7 @@ def main():
         z = 2.0 * np.pi * np.random.rand()
         u0 = np.array([x, y, z])
 
-        print(par_value, u0)
+        print(f'{par}={par_value}, u0={u0}')
 
         J_val, dJdpar_val = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
         J_arr[i] = J_val
