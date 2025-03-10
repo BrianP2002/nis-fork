@@ -17,3 +17,4 @@ references/
 reports_deduction/
 
 test.py
+*.out
