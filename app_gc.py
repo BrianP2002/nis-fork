@@ -12,7 +12,7 @@ a1_global = 1.0
 iota_global = 0.5
 lam_global = 0.1
 G_global = 1.0
-dt = 0.01
+dt = 0.001
 
 precomputed_derivatives = None
 precomputed_spatial_derivatives = None
@@ -152,9 +152,9 @@ def Euler(u, w, vstar, par, value):
     return uwvs_new
 
 def main():
-    nseg = 50
+    nseg = 100
     T_seg = 2
-    nseg_ps = 50
+    nseg_ps = 100
     nc = 3
     nus = 2
     
@@ -162,9 +162,9 @@ def main():
     precomputed_derivatives = compute_derivatives()
     precomputed_spatial_derivatives = compute_spatial_derivatives()
     
-    par = "a0"
-    par_lb = -0.1
-    par_ub = 0.1
+    par = "a1"
+    par_lb = 0.9
+    par_ub = 1.1
     step_size = 0.01
     num_steps = int(round((par_ub - par_lb) / step_size)) + 1
     par_arr = np.linspace(par_lb, par_ub, num_steps)
