@@ -139,6 +139,7 @@ def nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, s, integrator, fJJu):
     for iseg in range(nseg):
         for i in (0, -1):
             ksi[iseg,i] = np.dot(v[iseg, i], f[iseg, i]) / np.dot(f[iseg, i], f[iseg, i])
+        print(abs(ksi[iseg, 0]))
         assert abs(ksi[iseg, 0]) <= 1e-5 
 
 

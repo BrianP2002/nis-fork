@@ -14,6 +14,9 @@ lam_global = 0.1
 G_global = 1.0
 dt = 0.001
 
+precomputed_derivatives = None
+precomputed_spatial_derivatives = None
+
 def set_params(par, value):
     global a0_global, a1_global, iota_global, lam_global, G_global
     if par == "a0":
@@ -58,8 +61,8 @@ def compute_derivatives():
                    sp.lambdify(parameters, sp.diff(df_dy, lambda_), "numpy"),
                    sp.lambdify(parameters, sp.diff(df_dz, lambda_), "numpy")]
     }
-
     return derivatives
+
 def compute_spatial_derivatives():
     x, y, z, a0, a1, iota, G, lambda_ = sp.symbols('x y z a0 a1 iota G lambda', real=True)
     B = 1 + a0 * sp.sqrt(x) * sp.cos(y - a1*z)
@@ -83,17 +86,10 @@ def compute_spatial_derivatives():
          sp.lambdify(parameters, sp.diff(df_dy, z), "numpy"),
          sp.lambdify(parameters, sp.diff(df_dz, z), "numpy")]
     ])
-
     return spatial_derivatives
 
-precomputed_derivatives = compute_derivatives()
-precomputed_spatial_derivatives = compute_spatial_derivatives()
-
 def B_func(x, y, z):
-    if x > 0:
-        return 1.0 + a0_global * np.sqrt(x) * np.cos(y - a1_global*z)
-    else:
-        return 1.0
+    return 1.0 + a0_global * np.sqrt(x) * np.cos(y - a1_global*z)
 
 def V_func(x, y, z):
     return np.sqrt(1.0 - lam_global * B_func(x, y, z))
@@ -102,18 +98,16 @@ def f_ode(x, y, z):
     B = B_func(x, y, z)
     invB = 1.0 / B
     factor = 2.0 / lam_global - B
-    if x > 0:
-        dBdy = -a0_global * np.sqrt(x) * np.sin(y - a1_global*z)
-    else:
-        dBdy = 0.0
-    f1 = -invB * dBdy * factor
-    if x > 0:
-        dBdx = a0_global * (1.0 / (2.0 * np.sqrt(x))) * np.cos(y - a1_global*z)
-    else:
-        dBdx = 0.0
-    f2 = invB * dBdx * factor + (iota_global * V_func(x, y, z) * B) / G_global
-    f3 = (B * V_func(x, y, z)) / G_global
-    return np.array([f1, f2, f3])
+    
+    dBdy = -a0_global * np.sqrt(x) * np.sin(y - a1_global*z)
+    dfdx = -invB * dBdy * factor
+    
+    dBdx = a0_global * (1.0 / (2.0 * np.sqrt(x))) * np.cos(y - a1_global*z)
+    dfdy = invB * dBdx * factor + (iota_global * V_func(x, y, z) * B) / G_global
+    
+    dfdz = (B * V_func(x, y, z)) / G_global
+    
+    return np.array([dfdx, dfdy, dfdz])
 
 def ddt(uwvs, par, value):
     set_params(par, value)
@@ -141,36 +135,15 @@ def fJJu(u, par, value):
     return f_val, x, np.array([1, 0, 0])
 
 def RK4(u, w, vstar, par, value):
-    # Ensure that u, w, and vstar are numpy arrays
-    u = np.array(u)
-    w = np.array(w)
-    vstar = np.array(vstar)
-    
-    # Keep uwvs as a list, not a numpy array
-    uwvs = [u, w, vstar]  # Keep as a list to avoid creating a ragged array
-    
-    # Compute k0
-    k0_u, k0_w, k0_vstar = ddt(uwvs, par, value)
-    k0_u, k0_w, k0_vstar = dt * np.array(k0_u), dt * np.array(k0_w), dt * np.array(k0_vstar)
+    uwvs = [u, w, vstar]
 
-    # Compute k1
-    k1_u, k1_w, k1_vstar = ddt([u + 0.5 * k0_u, w + 0.5 * k0_w, vstar + 0.5 * k0_vstar], par, value)
-    k1_u, k1_w, k1_vstar = dt * np.array(k1_u), dt * np.array(k1_w), dt * np.array(k1_vstar)
+    k0 = [dt * vec for vec in ddt(uwvs, par, value)]
+    k1 = [dt * vec for vec in ddt([uwvs[i] + 0.5*k0[i] for i in range(3)], par, value)]
+    k2 = [dt * vec for vec in ddt([uwvs[i] + 0.5*k1[i] for i in range(3)], par, value)]
+    k3 = [dt * vec for vec in ddt([uwvs[i] + k2[i] for i in range(3)], par, value)]
+    uwvs_new = [uwvs[i] + (k0[i] + 2*k1[i] + 2*k2[i] + k3[i]) / 6.0 for i in range(3)]
+    return uwvs_new
 
-    # Compute k2
-    k2_u, k2_w, k2_vstar = ddt([u + 0.5 * k1_u, w + 0.5 * k1_w, vstar + 0.5 * k1_vstar], par, value)
-    k2_u, k2_w, k2_vstar = dt * np.array(k2_u), dt * np.array(k2_w), dt * np.array(k2_vstar)
-
-    # Compute k3
-    k3_u, k3_w, k3_vstar = ddt([u + k2_u, w + k2_w, vstar + k2_vstar], par, value)
-    k3_u, k3_w, k3_vstar = dt * np.array(k3_u), dt * np.array(k3_w), dt * np.array(k3_vstar)
-
-    # Update state vectors
-    u_new = u + (k0_u + 2 * k1_u + 2 * k2_u + k3_u) / 6.0
-    w_new = w + (k0_w + 2 * k1_w + 2 * k2_w + k3_w) / 6.0
-    vstar_new = vstar + (k0_vstar + 2 * k1_vstar + 2 * k2_vstar + k3_vstar) / 6.0
-
-    return u_new, w_new, vstar_new
 
 def Euler(u, w, vstar, par, value):
     uwvs = [u, w, vstar]
@@ -179,27 +152,34 @@ def Euler(u, w, vstar, par, value):
     return uwvs_new
 
 def main():
-    nseg = 10
+    nseg = 50
     T_seg = 2
-    nseg_ps = 10
+    nseg_ps = 50
     nc = 3
     nus = 2
-    par = "a0"
-    par_lb = -0.1
-    par_ub = 0.1
+    
+    global precomputed_derivatives, precomputed_spatial_derivatives
+    precomputed_derivatives = compute_derivatives()
+    precomputed_spatial_derivatives = compute_spatial_derivatives()
+    
+    par = "a1"
+    par_lb = 0.9
+    par_ub = 1.1
     step_size = 0.01
-    par_arr = np.arange(par_lb, par_ub, step_size)
+    num_steps = int(round((par_ub - par_lb) / step_size)) + 1
+    par_arr = np.linspace(par_lb, par_ub, num_steps)
+    
     J_arr = np.zeros(par_arr.shape)
     dJdpar_arr = np.zeros(par_arr.shape)
+    
     for i, par_value in enumerate(par_arr):
         x = 0.1 * np.random.rand()  
         y = 2.0 * np.pi * np.random.rand()
         z = 2.0 * np.pi * np.random.rand()
         u0 = np.array([x, y, z])
-
         print(f'{par}={par_value}, u0={u0}')
 
-        J_val, dJdpar_val = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, Euler, fJJu)
+        J_val, dJdpar_val = nilss(dt, nseg, T_seg, nseg_ps, u0, nus, par, par_value, RK4, fJJu)
         J_arr[i] = J_val
         dJdpar_arr[i] = dJdpar_val
     

@@ -26,7 +26,7 @@ def ode_system(t, y, args):
 
 params = {
     "a0": 0.1,
-    "a1": 1.0,
+    "a1": 0.95,
     "iota": 0.5,
     "G": 1.0,
     "lambda": 0.1
@@ -37,7 +37,7 @@ x = 0.1 * np.random.rand()
 y = 2.0 * np.pi * np.random.rand()
 z = 2.0 * np.pi * np.random.rand()
 y0 = jnp.array([x, y, z])
-t0, t1 = 0, 1
-saveat = diffrax.SaveAt(ts=jnp.linspace(t0, t1, 50))
+t0, t1 = 0, 20
+saveat = diffrax.SaveAt(ts=jnp.linspace(t0, t1, 200))
 sol = diffrax.diffeqsolve(term, solver, t0=t0, t1=t1, dt0=1e-3, y0=y0, args=params, max_steps=100000, saveat = saveat)
 print(sol.ys)
